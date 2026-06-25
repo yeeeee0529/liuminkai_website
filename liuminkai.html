@@ -1,124 +1,435 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>liuminkai</title>
+    <link rel="icon" href="icon.jpeg">
     <style>
         :root {
-            --bg-color: #000000;
-            --text-color: #808080;
-            --center-color: #606060;
-            --footer-color: #505050;
-            --hover-color: #a0a0a0;
+            --bg: #000000;
+            --panel: #000000;
+            --text: #e6e8ee;
+            --muted: #b9bec8;
+            --dim: #77818f;
+            --line: #26313f;
+            --accent: #22a7df;
+            --accent-2: #8bd5ff;
+            --error: #ff6b6b;
         }
 
-        [data-theme="light"] {
-            --bg-color: #ffffff;
-            --text-color: #404040;
-            --center-color: #303030;
-            --footer-color: #202020;
-            --hover-color: #606060;
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "SFMono-Regular", "Cascadia Code", "Fira Code", "Courier New", monospace;
         }
 
         body {
-            margin: 0;
-            font-family: "Courier New", Courier, monospace;
-            background: var(--bg-color);
-            color: var(--text-color);
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            display: grid;
+            place-items: stretch;
+            padding: clamp(18px, 3vw, 36px);
         }
 
-        #center {
-            text-align: center;
-            font-size: 4rem;
-            font-weight: bold;
-            color: var(--center-color);
-            font-family: "Fira Code", monospace;
-            letter-spacing: 0.1rem;
-            transition: color 0.3s ease;
-        }
-
-        .link, .hobby {
-            position: absolute;
-            text-decoration: none;
-            color: var(--text-color);
-            font-size: 1.2rem;
-            transition: color 0.3s ease;
-        }
-
-        .link:hover {
-            color: var(--hover-color);
-        }
-
-        .footer {
-            font-size: 0.8rem;
-            color: var(--footer-color);
-            position: absolute;
-            bottom: 10px;
+        .terminal {
             width: 100%;
-            text-align: center;
-            transition: color 0.3s ease;
+            min-height: calc(100vh - clamp(36px, 6vw, 72px));
+            background: var(--panel);
+            overflow: hidden;
         }
 
-        .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: none;
-            border: none;
-            color: var(--text-color);
-            cursor: pointer;
-            font-size: 1.5rem;
-            transition: color 0.3s ease;
+        .terminal-body {
+            min-height: calc(100vh - clamp(36px, 6vw, 72px));
             padding: 0;
-            width: 2rem;
-            height: 2rem;
+            font-size: clamp(1rem, 1.15vw, 1.38rem);
+        }
+
+        .output {
+            min-height: 0;
+            overflow: auto;
+            padding-bottom: 4px;
+            scroll-behavior: smooth;
+        }
+
+        .line {
+            margin: 0 0 8px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            line-height: 1.35;
+        }
+
+        .profile-title {
+            margin-bottom: 8px;
+            font-size: 1.35em;
+            line-height: 1.15;
+            color: var(--text);
+        }
+
+        .command-line {
+            color: var(--text);
+        }
+
+        .prompt {
+            color: var(--accent);
+        }
+
+        .prompt-path {
+            display: inline-block;
+            min-width: 32px;
+            padding: 0 10px;
+            color: var(--accent);
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .dim {
+            color: var(--dim);
+        }
+
+        .key {
+            color: var(--accent-2);
+        }
+
+        .error {
+            color: var(--error);
+        }
+
+        .input-form {
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-top: 2px;
         }
 
-        .theme-toggle:hover {
-            color: var(--hover-color);
+        .terminal-input {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            border: 0;
+            outline: 0;
+            padding: 0;
+            background: transparent;
+            color: var(--text);
+            caret-color: var(--accent);
+            font: inherit;
+        }
+
+        .input-shell {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+            min-height: 1.35em;
+        }
+
+        .suggestion-line {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            white-space: pre;
+            color: var(--dim);
+        }
+
+        .suggestion {
+            display: inline-block;
+            color: inherit;
+        }
+
+        .prompt-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 10px;
+            }
+
+            .terminal {
+                min-height: calc(100vh - 20px);
+            }
+
+            .terminal-body {
+                min-height: calc(100vh - 20px);
+                font-size: 1rem;
+            }
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="icon.jpeg">
 </head>
 <body>
-    <button class="theme-toggle" onclick="toggleTheme()" aria-label="切換主題">☽</button>
-    <div id="center">LIUMINKAI</div>
-    <a href="https://www.instagram.com/yeee_0529/" class="link" style="top: 15%; left: 10%;" target="_blank">Instagram</a>
-    <a href="mailto:liuminkai@yeeeee.me" class="link" style="top: 40%; left: 20%;">Email</a>
-    <a href="https://x.com/yeeeee0529" class="link" style="top: 65%; left: 25%;" target="_blank">X (Twitter)</a>
-    <a href="https://www.facebook.com/profile.php?id=100024583774052" class="link" style="top: 35%; left: 80%;" target="_blank">Facebook</a>
-    <div class="footer">&copy; <span id="current-year"></span> LIUMINKAI. All rights reserved.</div>
+    <main class="terminal" aria-label="liuminkai interactive terminal">
+        <section class="terminal-body" onclick="document.getElementById('terminal-input').focus()">
+            <div class="output" id="output" aria-live="polite"></div>
+
+            <form class="input-form" id="terminal-form" autocomplete="off">
+                <div class="prompt-row">
+                    <span class="prompt-path">~</span>
+                    <span class="input-shell">
+                        <span class="suggestion-line" id="suggestion" aria-hidden="true"></span>
+                        <input
+                            class="terminal-input"
+                            id="terminal-input"
+                            name="command"
+                            type="text"
+                            spellcheck="false"
+                            autocapitalize="off"
+                            autocomplete="off"
+                            autofocus
+                        >
+                    </span>
+                </div>
+            </form>
+        </section>
+    </main>
 
     <script>
-        document.getElementById('current-year').textContent = new Date().getFullYear();
+        const output = document.getElementById("output");
+        const form = document.getElementById("terminal-form");
+        const input = document.getElementById("terminal-input");
+        const suggestion = document.getElementById("suggestion");
 
-        function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            const themeButton = document.querySelector('.theme-toggle');
-            themeButton.textContent = newTheme === 'light' ? '☽' : '☉';
+        const links = {
+            instagram: "https://www.instagram.com/yeee_0529/",
+            x: "https://x.com/yeeeee0529",
+            twitter: "https://x.com/yeeeee0529",
+            facebook: "https://www.facebook.com/profile.php?id=100024583774052",
+            github: "https://github.com/OH4MA",
+            email: "mailto:liuminkai@yeeeee.me"
+        };
+
+        const files = {
+            about: [
+                "<span class=\"key\">name</span>: liuminkai",
+                "<span class=\"key\">site</span>: yeeeee.me",
+                "<span class=\"key\">mail</span>: liuminkai@yeeeee.me"
+            ],
+            links: [
+                "instagram",
+                "x",
+                "facebook",
+                "github",
+                "email"
+            ]
+        };
+
+        const commandHelp = [
+            ["help", "show commands"],
+            ["whoami", "print profile name"],
+            ["pwd", "print current path"],
+            ["ls", "list files"],
+            ["cat about", "show basic info"],
+            ["cat links", "show link names"],
+            ["instagram", "open Instagram"],
+            ["x", "open X"],
+            ["facebook", "open Facebook"],
+            ["github", "open GitHub"],
+            ["email", "email address"],
+            ["clear", "clear terminal"]
+        ];
+
+        const completions = commandHelp.map(([command]) => command);
+
+        const history = [];
+        let historyIndex = 0;
+        let activeSuggestion = "";
+
+        function writeLine(content = "", className = "") {
+            const line = document.createElement("p");
+            line.className = `line ${className}`.trim();
+            line.innerHTML = content;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
         }
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            const themeButton = document.querySelector('.theme-toggle');
-            themeButton.textContent = savedTheme === 'light' ? '☽' : '☉';
+
+        function writeCommand(command) {
+            writeLine(`<span class="prompt-path">~</span> ${escapeHtml(command)}`, "command-line");
+        }
+
+        function escapeHtml(value) {
+            return value
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll("\"", "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        function showHelp() {
+            writeLine("Available commands:", "muted");
+            commandHelp.forEach(([command, description]) => {
+                writeLine(`  ${command.padEnd(12, " ")} ${description}`, "muted");
+            });
+        }
+
+        function getAgeFromBirthday(year, month, day) {
+            const today = new Date();
+            let age = today.getFullYear() - year;
+            const hasHadBirthdayThisYear =
+                today.getMonth() + 1 > month ||
+                (today.getMonth() + 1 === month && today.getDate() >= day);
+
+            if (!hasHadBirthdayThisYear) {
+                age -= 1;
+            }
+
+            return age;
+        }
+
+        function showProfileIntro() {
+            writeLine("liuminkai", "profile-title");
+            writeLine(`Taipei / ${getAgeFromBirthday(2009, 5, 29)}y / Programmer / Photographer`);
+            writeLine("");
+        }
+
+        function resetTerminal() {
+            output.innerHTML = "";
+            showProfileIntro();
+        }
+
+        function runCommand(rawCommand) {
+            const command = rawCommand.trim();
+            if (!command) {
+                return;
+            }
+
+            history.push(command);
+            historyIndex = history.length;
+            writeCommand(command);
+
+            const [program, ...args] = command.toLowerCase().split(/\s+/);
+            const target = args.join(" ");
+
+            switch (program) {
+                case "help":
+                    showHelp();
+                    break;
+                case "whoami":
+                    writeLine("LIUMINKAI");
+                    break;
+                case "pwd":
+                    writeLine("/Users/liuminkai/profile");
+                    break;
+                case "ls":
+                    writeLine("about  links", "muted");
+                    break;
+                case "cat":
+                    if (files[target]) {
+                        files[target].forEach((line) => writeLine(line));
+                    } else {
+                        writeLine(`cat: ${escapeHtml(target || "")}: No such file`, "error");
+                    }
+                    break;
+                case "email":
+                    writeLine("liuminkai@yeeeee.me");
+                    break;
+                case "instagram":
+                case "x":
+                case "twitter":
+                case "facebook":
+                case "github":
+                    openLink(program);
+                    break;
+                case "clear":
+                    resetTerminal();
+                    break;
+                default:
+                    writeLine(`${escapeHtml(program)}: command not found`, "error");
+                    writeLine("type `help` to see available commands", "dim");
+                    break;
+            }
+        }
+
+        function openLink(name) {
+            const url = links[name];
+            if (!url) {
+                writeLine(`open: ${escapeHtml(name || "")}: unknown target`, "error");
+                return;
+            }
+
+            writeLine(`opening ${escapeHtml(name)}...`, "muted");
+            window.open(url, name === "email" ? "_self" : "_blank", "noopener,noreferrer");
+        }
+
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            runCommand(input.value);
+            input.value = "";
+            updateSuggestion();
         });
+
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Tab") {
+                event.preventDefault();
+                acceptSuggestion();
+                return;
+            }
+
+            if (event.key === "ArrowRight" && activeSuggestion) {
+                event.preventDefault();
+                acceptSuggestion();
+                return;
+            }
+
+            if (event.key === "ArrowUp") {
+                event.preventDefault();
+                historyIndex = Math.max(0, historyIndex - 1);
+                input.value = history[historyIndex] || "";
+                updateSuggestion();
+            }
+
+            if (event.key === "ArrowDown") {
+                event.preventDefault();
+                historyIndex = Math.min(history.length, historyIndex + 1);
+                input.value = history[historyIndex] || "";
+                updateSuggestion();
+            }
+        });
+
+        input.addEventListener("input", updateSuggestion);
+
+        function updateSuggestion() {
+            const current = input.value;
+            const normalized = current.toLowerCase();
+            const match = normalized
+                ? completions.find((command) => command.startsWith(normalized) && command !== normalized)
+                : "";
+
+            activeSuggestion = match ? match.slice(current.length) : "";
+            suggestion.textContent = activeSuggestion;
+            suggestion.style.transform = `translateX(${measureInputText(current)}px)`;
+        }
+
+        function measureInputText(value) {
+            const canvas = measureInputText.canvas || (measureInputText.canvas = document.createElement("canvas"));
+            const context = canvas.getContext("2d");
+            context.font = getComputedStyle(input).font;
+            return context.measureText(value).width;
+        }
+
+        function acceptSuggestion() {
+            if (!activeSuggestion) {
+                return;
+            }
+
+            input.value += activeSuggestion;
+            updateSuggestion();
+        }
+
+        showProfileIntro();
+        showHelp();
+        updateSuggestion();
+        input.focus();
     </script>
 </body>
 </html>
