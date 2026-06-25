@@ -227,7 +227,6 @@
             ["help", "show commands"],
             ["whoami", "print profile name"],
             ["pwd", "print current path"],
-            ["ls", "list files"],
             ["cat about", "show basic info"],
             ["cat links", "show link names"],
             ["instagram", "open Instagram"],
@@ -319,9 +318,6 @@
                     break;
                 case "pwd":
                     writeLine("/Users/liuminkai/profile");
-                    break;
-                case "ls":
-                    writeLine("about  links", "muted");
                     break;
                 case "cat":
                     if (files[target]) {
