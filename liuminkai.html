@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>liuminkai</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --text-color: #808080;
+            --center-color: #606060;
+            --footer-color: #505050;
+            --hover-color: #a0a0a0;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #ffffff;
+            --text-color: #404040;
+            --center-color: #303030;
+            --footer-color: #202020;
+            --hover-color: #606060;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Courier New", Courier, monospace;
+            background: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        #center {
+            text-align: center;
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--center-color);
+            font-family: "Fira Code", monospace;
+            letter-spacing: 0.1rem;
+            transition: color 0.3s ease;
+        }
+
+        .link, .hobby {
+            position: absolute;
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+
+        .link:hover {
+            color: var(--hover-color);
+        }
+
+        .footer {
+            font-size: 0.8rem;
+            color: var(--footer-color);
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: color 0.3s ease;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle:hover {
+            color: var(--hover-color);
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="icon.jpeg">
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="切換主題">☽</button>
+    <div id="center">LIUMINKAI</div>
+    <a href="https://www.instagram.com/yeee_0529/" class="link" style="top: 15%; left: 10%;" target="_blank">Instagram</a>
+    <a href="mailto:liuminkai@yeeeee.me" class="link" style="top: 40%; left: 20%;">Email</a>
+    <a href="https://x.com/yeeeee0529" class="link" style="top: 65%; left: 25%;" target="_blank">X (Twitter)</a>
+    <a href="https://www.facebook.com/profile.php?id=100024583774052" class="link" style="top: 35%; left: 80%;" target="_blank">Facebook</a>
+    <div class="footer">&copy; <span id="current-year"></span> LIUMINKAI. All rights reserved.</div>
+
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            const themeButton = document.querySelector('.theme-toggle');
+            themeButton.textContent = newTheme === 'light' ? '☽' : '☉';
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            const themeButton = document.querySelector('.theme-toggle');
+            themeButton.textContent = savedTheme === 'light' ? '☽' : '☉';
+        });
+    </script>
+</body>
+</html>
