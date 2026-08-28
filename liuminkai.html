@@ -104,6 +104,7 @@
         }
 
         .input-form {
+            position: relative;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -144,6 +145,49 @@
             color: inherit;
         }
 
+        .suggestion-bar {
+            display: none;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 100%;
+            margin-top: 10px;
+            padding-bottom: 2px;
+            gap: 8px;
+            background: var(--panel);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .suggestion-bar[hidden] {
+            display: none;
+        }
+
+        .chip {
+            flex: 0 0 auto;
+            min-height: 40px;
+            padding: 6px 14px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: rgba(34, 167, 223, 0.08);
+            color: var(--muted);
+            font: inherit;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .chip:active {
+            border-color: var(--accent);
+            color: var(--accent-2);
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .chip:hover {
+                border-color: var(--accent);
+                color: var(--accent-2);
+            }
+        }
+
         .prompt-row {
             display: flex;
             align-items: center;
@@ -165,6 +209,20 @@
                 font-size: 1rem;
             }
         }
+
+        @media (pointer: coarse) {
+            .suggestion-bar:not([hidden]) {
+                display: flex;
+            }
+
+            .suggestion-line {
+                pointer-events: auto;
+            }
+
+            .suggestion:active {
+                color: var(--accent-2);
+            }
+        }
     </style>
 </head>
 <body>
@@ -173,6 +231,7 @@
             <div class="output" id="output" aria-live="polite"></div>
 
             <form class="input-form" id="terminal-form" autocomplete="off">
+                <div class="suggestion-bar" id="suggestion-bar" hidden aria-label="command suggestions"></div>
                 <div class="prompt-row">
                     <span class="prompt-path">~</span>
                     <span class="input-shell">
@@ -198,6 +257,7 @@
         const form = document.getElementById("terminal-form");
         const input = document.getElementById("terminal-input");
         const suggestion = document.getElementById("suggestion");
+        const suggestionBar = document.getElementById("suggestion-bar");
 
         const links = {
             instagram: "https://www.instagram.com/yeee_0529/",
@@ -394,16 +454,48 @@
 
         input.addEventListener("input", updateSuggestion);
 
+        suggestion.addEventListener("click", () => {
+            acceptSuggestion();
+            input.focus();
+        });
+
+        function getCandidates(value) {
+            const normalized = value.toLowerCase();
+            if (!normalized) {
+                return [];
+            }
+
+            return completions.filter((command) => command.startsWith(normalized) && command !== normalized);
+        }
+
+        function renderChips(candidates) {
+            suggestionBar.innerHTML = "";
+
+            candidates.forEach((command) => {
+                const chip = document.createElement("button");
+                chip.type = "button";
+                chip.className = "chip";
+                chip.textContent = command;
+                chip.addEventListener("click", () => {
+                    input.value = command;
+                    updateSuggestion();
+                    input.focus();
+                });
+                suggestionBar.appendChild(chip);
+            });
+
+            suggestionBar.hidden = candidates.length === 0;
+        }
+
         function updateSuggestion() {
             const current = input.value;
-            const normalized = current.toLowerCase();
-            const match = normalized
-                ? completions.find((command) => command.startsWith(normalized) && command !== normalized)
-                : "";
+            const candidates = getCandidates(current);
+            const match = candidates[0] || "";
 
             activeSuggestion = match ? match.slice(current.length) : "";
             suggestion.textContent = activeSuggestion;
             suggestion.style.transform = `translateX(${measureInputText(current)}px)`;
+            renderChips(candidates);
         }
 
         function measureInputText(value) {
