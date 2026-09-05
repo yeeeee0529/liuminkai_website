@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>liuminkai</title>
+    <title>聯絡我 / liuminkai</title>
     <link rel="icon" href="icon.jpeg">
     <style>
         :root {
@@ -101,6 +101,40 @@
 
         .error {
             color: var(--error);
+        }
+
+        .contact-link {
+            color: var(--accent-2);
+            text-decoration: none;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .contact-link:hover {
+            border-bottom-color: var(--accent-2);
+        }
+
+        .contact-copy {
+            color: var(--accent-2);
+            background: none;
+            border: 0;
+            border-bottom: 1px solid var(--line);
+            padding: 0;
+            font: inherit;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .contact-copy:hover {
+            border-bottom-color: var(--accent-2);
+        }
+
+        .back-link {
+            color: var(--dim);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: var(--accent-2);
         }
 
         .input-form {
@@ -226,7 +260,7 @@
     </style>
 </head>
 <body>
-    <main class="terminal" aria-label="liuminkai interactive terminal">
+    <main class="terminal" aria-label="liuminkai contact terminal">
         <section class="terminal-body" onclick="document.getElementById('terminal-input').focus()">
             <div class="output" id="output" aria-live="polite"></div>
 
@@ -259,42 +293,19 @@
         const suggestion = document.getElementById("suggestion");
         const suggestionBar = document.getElementById("suggestion-bar");
 
-        const links = {
-            instagram: "https://www.instagram.com/yeee_0529/",
-            x: "https://x.com/yeeeee0529",
-            twitter: "https://x.com/yeeeee0529",
-            facebook: "https://www.facebook.com/profile.php?id=100024583774052",
-            github: "https://github.com/yeeeee0529",
-            email: "mailto:liuminkai@yeeeee.me"
-        };
-
-        const files = {
-            about: [
-                "<span class=\"key\">name</span>: liuminkai",
-                "<span class=\"key\">site</span>: yeeeee.me",
-                "<span class=\"key\">mail</span>: liuminkai@yeeeee.me"
-            ],
-            links: [
-                "instagram",
-                "x",
-                "facebook",
-                "github",
-                "email"
-            ]
+        const contacts = {
+            signal: { label: "@yeeeee0529.24", url: "https://signal.me/#eu/ii61W7G-5GtEW_AqeUflieftaqG0pBRb9f7Dx_4PFo8wj1XiwJpOt4EuyGRO5o0_", external: true },
+            telegram: { label: "@yeeeee0529", url: "https://t.me/yeeeee0529", external: true },
+            discord: { label: "@yeee_0529", url: null, external: false },
+            email: { label: "liuminkai@yeeeee.me", url: "mailto:liuminkai@yeeeee.me", external: false }
         };
 
         const commandHelp = [
             ["help", "show commands"],
-            ["whoami", "print profile name"],
-            ["pwd", "print current path"],
-            ["cat about", "show basic info"],
-            ["cat links", "show link names"],
-            ["instagram", "open Instagram"],
-            ["x", "open X"],
-            ["facebook", "open Facebook"],
-            ["github", "open GitHub"],
+            ["signal", "open Signal"],
+            ["telegram", "open Telegram"],
+            ["discord", "copy Discord ID"],
             ["email", "email address"],
-            ["contact", "open contact page"],
             ["clear", "clear terminal"]
         ];
 
@@ -325,6 +336,54 @@
                 .replaceAll("'", "&#039;");
         }
 
+        function writeContact(name) {
+            const contact = contacts[name];
+            const line = document.createElement("p");
+            line.className = "line";
+
+            const key = document.createElement("span");
+            key.className = "key";
+            key.textContent = name.padEnd(9, " ");
+            line.appendChild(key);
+
+            if (name === "discord") {
+                const copy = document.createElement("button");
+                copy.type = "button";
+                copy.className = "contact-copy";
+                copy.textContent = contact.label;
+                copy.addEventListener("click", () => copyDiscordId());
+                line.appendChild(copy);
+            } else {
+                const link = document.createElement("a");
+                link.className = "contact-link";
+                link.href = contact.url;
+                link.textContent = contact.label;
+                if (contact.external) {
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                }
+                line.appendChild(link);
+            }
+
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function copyDiscordId() {
+            const id = contacts.discord.label;
+            navigator.clipboard.writeText(id).catch(() => {
+                const helper = document.createElement("textarea");
+                helper.value = id;
+                helper.style.position = "fixed";
+                helper.style.opacity = "0";
+                document.body.appendChild(helper);
+                helper.select();
+                document.execCommand("copy");
+                helper.remove();
+            });
+            writeLine(`copied ${id} to clipboard`, "muted");
+        }
+
         function showHelp() {
             writeLine("Available commands:", "muted");
             commandHelp.forEach(([command, description]) => {
@@ -332,29 +391,37 @@
             });
         }
 
-        function getAgeFromBirthday(year, month, day) {
-            const today = new Date();
-            let age = today.getFullYear() - year;
-            const hasHadBirthdayThisYear =
-                today.getMonth() + 1 > month ||
-                (today.getMonth() + 1 === month && today.getDate() >= day);
-
-            if (!hasHadBirthdayThisYear) {
-                age -= 1;
-            }
-
-            return age;
-        }
-
-        function showProfileIntro() {
-            writeLine("liuminkai", "profile-title");
-            writeLine(`Taipei / ${getAgeFromBirthday(2009, 5, 29)}y / Programmer / Photographer`);
-            writeLine("");
-        }
-
         function resetTerminal() {
             output.innerHTML = "";
-            showProfileIntro();
+            showContacts();
+        }
+
+        function showContacts() {
+            writeLine("liuminkai — contact", "profile-title");
+            writeLine("Taipei / yeeeee.me");
+            writeLine("");
+            Object.keys(contacts).forEach((name) => writeContact(name));
+            writeLine("");
+            writeLine("click a contact or type a command", "dim");
+            writeLine("type `help` to see commands", "dim");
+            writeLine("");
+            writeLine('<a class="back-link" href="liuminkai.html">← back to profile</a>');
+        }
+
+        function openContact(name) {
+            const contact = contacts[name];
+            if (!contact) {
+                writeLine(`open: ${escapeHtml(name || "")}: unknown target`, "error");
+                return;
+            }
+
+            if (name === "discord") {
+                copyDiscordId();
+                return;
+            }
+
+            writeLine(`opening ${escapeHtml(name)}...`, "muted");
+            window.open(contact.url, contact.external ? "_blank" : "_self", "noopener,noreferrer");
         }
 
         function runCommand(rawCommand) {
@@ -367,39 +434,19 @@
             historyIndex = history.length;
             writeCommand(command);
 
-            const [program, ...args] = command.toLowerCase().split(/\s+/);
-            const target = args.join(" ");
+            const program = command.toLowerCase();
 
             switch (program) {
                 case "help":
                     showHelp();
                     break;
-                case "whoami":
-                    writeLine("LIUMINKAI");
-                    break;
-                case "pwd":
-                    writeLine("/Users/liuminkai/profile");
-                    break;
-                case "cat":
-                    if (files[target]) {
-                        files[target].forEach((line) => writeLine(line));
-                    } else {
-                        writeLine(`cat: ${escapeHtml(target || "")}: No such file`, "error");
-                    }
+                case "signal":
+                case "telegram":
+                case "discord":
+                    openContact(program);
                     break;
                 case "email":
-                    writeLine("liuminkai@yeeeee.me");
-                    break;
-                case "instagram":
-                case "x":
-                case "twitter":
-                case "facebook":
-                case "github":
-                    openLink(program);
-                    break;
-                case "contact":
-                    writeLine("opening contact...", "muted");
-                    window.open("contact.html", "_self", "noopener,noreferrer");
+                    writeLine(contacts.email.label, "key");
                     break;
                 case "clear":
                     resetTerminal();
@@ -409,17 +456,6 @@
                     writeLine("type `help` to see available commands", "dim");
                     break;
             }
-        }
-
-        function openLink(name) {
-            const url = links[name];
-            if (!url) {
-                writeLine(`open: ${escapeHtml(name || "")}: unknown target`, "error");
-                return;
-            }
-
-            writeLine(`opening ${escapeHtml(name)}...`, "muted");
-            window.open(url, name === "email" ? "_self" : "_blank", "noopener,noreferrer");
         }
 
         form.addEventListener("submit", (event) => {
@@ -519,8 +555,7 @@
             updateSuggestion();
         }
 
-        showProfileIntro();
-        showHelp();
+        showContacts();
         updateSuggestion();
         input.focus();
     </script>
