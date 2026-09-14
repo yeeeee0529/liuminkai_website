@@ -11,10 +11,12 @@
 
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const root = path.join(__dirname, "..");
 const photoDir = path.join(root, "photo");
 const manifestPath = path.join(photoDir, "manifest.js");
+const photoPagePath = path.join(root, "photo.html");
 
 // Cloudflare Pages rejects files over 25 MiB; leave headroom for metadata.
 const MAX_IMAGE_BYTES = 24 * 1024 * 1024;
@@ -101,16 +103,27 @@ async function listWorks() {
     return works;
 }
 
+function updateManifestVersion(payload) {
+    const version = crypto.createHash("md5").update(payload).digest("hex").slice(0, 8);
+    const page = fs.readFileSync(photoPagePath, "utf8");
+    const updated = page.replace(/photo\/manifest\.js\?v=[^"']*/, `photo/manifest.js?v=${version}`);
+    if (updated !== page) {
+        fs.writeFileSync(photoPagePath, updated, "utf8");
+    }
+    return version;
+}
+
 async function main() {
     const works = await listWorks();
     const payload = `window.PHOTO_WORKS = ${JSON.stringify(works, null, 4)};\n`;
 
     fs.writeFileSync(manifestPath, payload, "utf8");
+    const version = updateManifestVersion(payload);
 
     if (works.length === 0) {
         console.log("photo manifest: no works found (photo/ is empty or missing)");
     } else {
-        console.log(`photo manifest: ${works.length} work(s) written to photo/manifest.js`);
+        console.log(`photo manifest: ${works.length} work(s) written to photo/manifest.js (v${version})`);
         works.forEach((work) => {
             const note = work.caption ? "caption" : "no caption";
             console.log(`  - ${work.slug} (${work.images.length} image(s), ${note})`);
