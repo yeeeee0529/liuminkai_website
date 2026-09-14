@@ -1,5 +1,3 @@
 name = "liuminkai"
 pages_build_output_dir = "."
 
-[build]
-command = "node scripts/build-photo-manifest.js"
