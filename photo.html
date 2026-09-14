@@ -125,11 +125,16 @@
 
         .photo-img {
             display: block;
-            max-width: 100%;
+            max-width: 50vw;
             height: auto;
             margin: 4px 0 12px;
             border: 1px solid var(--line);
             cursor: pointer;
+        }
+
+        .photo-caption {
+            color: var(--dim);
+            font-size: 0.85em;
         }
 
         .back-link {
@@ -271,7 +276,7 @@
             <form class="input-form" id="terminal-form" autocomplete="off">
                 <div class="suggestion-bar" id="suggestion-bar" hidden aria-label="command suggestions"></div>
                 <div class="prompt-row">
-                    <span class="prompt-path">~/photo</span>
+                    <span class="prompt-path">~</span>
                     <span class="input-shell">
                         <span class="suggestion-line" id="suggestion" aria-hidden="true"></span>
                         <input
@@ -304,7 +309,6 @@
         const commandHelp = [
             ["help", "show commands"],
             ["list", "list all works"],
-            ["show <work>", "show a work"],
             ["next", "next work"],
             ["prev", "previous work"],
             ["random", "random work"],
@@ -312,9 +316,7 @@
             ["clear", "clear terminal"]
         ];
 
-        const completions = commandHelp
-            .map(([command]) => command)
-            .concat(works.map((work) => `show ${work.slug}`));
+        const completions = commandHelp.map(([command]) => command);
 
         const history = [];
         let historyIndex = 0;
@@ -330,7 +332,7 @@
         }
 
         function writeCommand(command) {
-            writeLine(`<span class="prompt-path">~/photo</span> ${escapeHtml(command)}`, "command-line");
+            writeLine(`<span class="prompt-path">~</span> ${escapeHtml(command)}`, "command-line");
         }
 
         function escapeHtml(value) {
@@ -408,7 +410,7 @@
             work.images.forEach((src) => writeImage(src));
 
             if (work.caption) {
-                writeLine(escapeHtml(work.caption), "muted");
+                writeLine(escapeHtml(work.caption), "photo-caption");
             }
         }
 
@@ -428,22 +430,6 @@
             works.forEach((work) => writeWorkRow(work));
         }
 
-        function showWorkByName(name) {
-            if (!name) {
-                writeLine("usage: show <work>", "error");
-                return;
-            }
-
-            const work = works.find((candidate) => candidate.slug.toLowerCase() === name.toLowerCase());
-            if (!work) {
-                writeLine(`show: ${escapeHtml(name)}: no such work`, "error");
-                writeLine("type `list` to see all works", "dim");
-                return;
-            }
-
-            showWork(work);
-        }
-
         function step(direction) {
             if (works.length === 0) {
                 writeLine("no works to browse", "error");
@@ -451,7 +437,7 @@
             }
 
             if (currentIndex === -1) {
-                writeLine("type `show <work>` first", "dim");
+                writeLine("click a work first", "dim");
                 return;
             }
 
@@ -474,7 +460,7 @@
             writeLine("");
             showWorkList();
             writeLine("");
-            writeLine("type `show <work>` to view a work", "dim");
+            writeLine("click a work or type a command", "dim");
             writeLine("type `help` to see commands", "dim");
             writeLine("");
             writeLine('<a class="back-link" href="liuminkai.html">← back to profile</a>');
@@ -496,8 +482,7 @@
             historyIndex = history.length;
             writeCommand(command);
 
-            const [program, ...args] = command.toLowerCase().split(/\s+/);
-            const target = args.join(" ");
+            const program = command.toLowerCase();
 
             switch (program) {
                 case "help":
@@ -506,9 +491,6 @@
                 case "list":
                 case "ls":
                     showWorkList();
-                    break;
-                case "show":
-                    showWorkByName(target);
                     break;
                 case "next":
                     step(1);
