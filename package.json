@@ -1,0 +1,13 @@
+{
+  "name": "yeeeee",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-photo-manifest.js"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "sharp": "^0.35.4"
+  }
+}
