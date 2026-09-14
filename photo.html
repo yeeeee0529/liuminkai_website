@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>liuminkai</title>
+    <title>攝影 / liuminkai</title>
     <link rel="icon" href="icon.jpeg">
     <style>
         :root {
@@ -101,6 +101,44 @@
 
         .error {
             color: var(--error);
+        }
+
+        .work-link {
+            color: var(--accent-2);
+            background: none;
+            border: 0;
+            border-bottom: 1px solid var(--line);
+            padding: 0;
+            font: inherit;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .work-link:hover {
+            border-bottom-color: var(--accent-2);
+        }
+
+        .photo-link {
+            display: inline-block;
+            max-width: 100%;
+        }
+
+        .photo-img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 4px 0 12px;
+            border: 1px solid var(--line);
+            cursor: pointer;
+        }
+
+        .back-link {
+            color: var(--dim);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: var(--accent-2);
         }
 
         .input-form {
@@ -226,14 +264,14 @@
     </style>
 </head>
 <body>
-    <main class="terminal" aria-label="liuminkai interactive terminal">
+    <main class="terminal" aria-label="liuminkai photography terminal">
         <section class="terminal-body" onclick="document.getElementById('terminal-input').focus()">
             <div class="output" id="output" aria-live="polite"></div>
 
             <form class="input-form" id="terminal-form" autocomplete="off">
                 <div class="suggestion-bar" id="suggestion-bar" hidden aria-label="command suggestions"></div>
                 <div class="prompt-row">
-                    <span class="prompt-path">~</span>
+                    <span class="prompt-path">~/photo</span>
                     <span class="input-shell">
                         <span class="suggestion-line" id="suggestion" aria-hidden="true"></span>
                         <input
@@ -252,6 +290,7 @@
         </section>
     </main>
 
+    <script src="photo/manifest.js"></script>
     <script>
         const output = document.getElementById("output");
         const form = document.getElementById("terminal-form");
@@ -259,51 +298,28 @@
         const suggestion = document.getElementById("suggestion");
         const suggestionBar = document.getElementById("suggestion-bar");
 
-        const links = {
-            instagram: "https://www.instagram.com/yeee_0529/",
-            x: "https://x.com/yeeeee0529",
-            twitter: "https://x.com/yeeeee0529",
-            facebook: "https://www.facebook.com/profile.php?id=100024583774052",
-            github: "https://github.com/yeeeee0529",
-            email: "mailto:liuminkai@yeeeee.me"
-        };
-
-        const files = {
-            about: [
-                "<span class=\"key\">name</span>: liuminkai",
-                "<span class=\"key\">site</span>: yeeeee.me",
-                "<span class=\"key\">mail</span>: liuminkai@yeeeee.me"
-            ],
-            links: [
-                "instagram",
-                "x",
-                "facebook",
-                "github",
-                "email"
-            ]
-        };
+        const works = window.PHOTO_WORKS || [];
+        const manifestMissing = !window.PHOTO_WORKS;
 
         const commandHelp = [
             ["help", "show commands"],
-            ["whoami", "print profile name"],
-            ["pwd", "print current path"],
-            ["cat about", "show basic info"],
-            ["cat links", "show link names"],
-            ["instagram", "open Instagram"],
-            ["x", "open X"],
-            ["facebook", "open Facebook"],
-            ["github", "open GitHub"],
-            ["email", "email address"],
-            ["photo", "open photography page"],
-            ["contact", "open contact page"],
+            ["list", "list all works"],
+            ["show <work>", "show a work"],
+            ["next", "next work"],
+            ["prev", "previous work"],
+            ["random", "random work"],
+            ["back", "back to profile"],
             ["clear", "clear terminal"]
         ];
 
-        const completions = commandHelp.map(([command]) => command);
+        const completions = commandHelp
+            .map(([command]) => command)
+            .concat(works.map((work) => `show ${work.slug}`));
 
         const history = [];
         let historyIndex = 0;
         let activeSuggestion = "";
+        let currentIndex = -1;
 
         function writeLine(content = "", className = "") {
             const line = document.createElement("p");
@@ -314,7 +330,7 @@
         }
 
         function writeCommand(command) {
-            writeLine(`<span class="prompt-path">~</span> ${escapeHtml(command)}`, "command-line");
+            writeLine(`<span class="prompt-path">~/photo</span> ${escapeHtml(command)}`, "command-line");
         }
 
         function escapeHtml(value) {
@@ -333,29 +349,141 @@
             });
         }
 
-        function getAgeFromBirthday(year, month, day) {
-            const today = new Date();
-            let age = today.getFullYear() - year;
-            const hasHadBirthdayThisYear =
-                today.getMonth() + 1 > month ||
-                (today.getMonth() + 1 === month && today.getDate() >= day);
+        function writeWorkRow(work) {
+            const line = document.createElement("p");
+            line.className = "line";
 
-            if (!hasHadBirthdayThisYear) {
-                age -= 1;
-            }
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "work-link";
+            button.textContent = work.slug;
+            button.addEventListener("click", () => showWork(work));
+            line.appendChild(button);
 
-            return age;
+            const count = document.createElement("span");
+            count.className = "dim";
+            count.textContent = `  ${work.images.length} photo(s)`;
+            line.appendChild(count);
+
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
         }
 
-        function showProfileIntro() {
-            writeLine("liuminkai", "profile-title");
-            writeLine(`Taipei / ${getAgeFromBirthday(2009, 5, 29)}y / Programmer / Photographer`);
+        function writeImage(src) {
+            const line = document.createElement("p");
+            line.className = "line";
+
+            const link = document.createElement("a");
+            link.className = "photo-link";
+            link.href = src;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+
+            const image = document.createElement("img");
+            image.className = "photo-img";
+            image.src = src;
+            image.loading = "lazy";
+            image.alt = src;
+            image.addEventListener("error", () => {
+                line.innerHTML = "";
+                const fail = document.createElement("span");
+                fail.className = "error";
+                fail.textContent = `error loading ${src}`;
+                line.appendChild(fail);
+            });
+
+            link.appendChild(image);
+            line.appendChild(link);
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function showWork(work) {
+            currentIndex = works.indexOf(work);
+            writeLine(`<span class="key">${escapeHtml(work.slug)}</span>`);
+
+            if (work.images.length === 0) {
+                writeLine("no images found in this work", "dim");
+            }
+            work.images.forEach((src) => writeImage(src));
+
+            if (work.caption) {
+                writeLine(escapeHtml(work.caption), "muted");
+            }
+        }
+
+        function showWorkList() {
+            if (manifestMissing) {
+                writeLine("photo manifest not found", "error");
+                writeLine("run `node scripts/build-photo-manifest.js` and reload", "dim");
+                return;
+            }
+
+            if (works.length === 0) {
+                writeLine("no works yet", "dim");
+                writeLine("add a folder under photo/ with images and a .txt note", "dim");
+                return;
+            }
+
+            works.forEach((work) => writeWorkRow(work));
+        }
+
+        function showWorkByName(name) {
+            if (!name) {
+                writeLine("usage: show <work>", "error");
+                return;
+            }
+
+            const work = works.find((candidate) => candidate.slug.toLowerCase() === name.toLowerCase());
+            if (!work) {
+                writeLine(`show: ${escapeHtml(name)}: no such work`, "error");
+                writeLine("type `list` to see all works", "dim");
+                return;
+            }
+
+            showWork(work);
+        }
+
+        function step(direction) {
+            if (works.length === 0) {
+                writeLine("no works to browse", "error");
+                return;
+            }
+
+            if (currentIndex === -1) {
+                writeLine("type `show <work>` first", "dim");
+                return;
+            }
+
+            const nextIndex = (currentIndex + direction + works.length) % works.length;
+            showWork(works[nextIndex]);
+        }
+
+        function showRandomWork() {
+            if (works.length === 0) {
+                writeLine("no works to show", "error");
+                return;
+            }
+
+            showWork(works[Math.floor(Math.random() * works.length)]);
+        }
+
+        function showIntro() {
+            writeLine("liuminkai — photography", "profile-title");
+            writeLine("Taipei / yeeeee.me");
             writeLine("");
+            showWorkList();
+            writeLine("");
+            writeLine("type `show <work>` to view a work", "dim");
+            writeLine("type `help` to see commands", "dim");
+            writeLine("");
+            writeLine('<a class="back-link" href="liuminkai.html">← back to profile</a>');
         }
 
         function resetTerminal() {
             output.innerHTML = "";
-            showProfileIntro();
+            currentIndex = -1;
+            showIntro();
         }
 
         function runCommand(rawCommand) {
@@ -375,36 +503,25 @@
                 case "help":
                     showHelp();
                     break;
-                case "whoami":
-                    writeLine("LIUMINKAI");
+                case "list":
+                case "ls":
+                    showWorkList();
                     break;
-                case "pwd":
-                    writeLine("/Users/liuminkai/profile");
+                case "show":
+                    showWorkByName(target);
                     break;
-                case "cat":
-                    if (files[target]) {
-                        files[target].forEach((line) => writeLine(line));
-                    } else {
-                        writeLine(`cat: ${escapeHtml(target || "")}: No such file`, "error");
-                    }
+                case "next":
+                    step(1);
                     break;
-                case "email":
-                    writeLine("liuminkai@yeeeee.me");
+                case "prev":
+                    step(-1);
                     break;
-                case "instagram":
-                case "x":
-                case "twitter":
-                case "facebook":
-                case "github":
-                    openLink(program);
+                case "random":
+                    showRandomWork();
                     break;
-                case "photo":
-                    writeLine("opening photo...", "muted");
-                    window.open("photo.html", "_self", "noopener,noreferrer");
-                    break;
-                case "contact":
-                    writeLine("opening contact...", "muted");
-                    window.open("contact.html", "_self", "noopener,noreferrer");
+                case "back":
+                    writeLine("opening profile...", "muted");
+                    window.open("liuminkai.html", "_self", "noopener,noreferrer");
                     break;
                 case "clear":
                     resetTerminal();
@@ -414,17 +531,6 @@
                     writeLine("type `help` to see available commands", "dim");
                     break;
             }
-        }
-
-        function openLink(name) {
-            const url = links[name];
-            if (!url) {
-                writeLine(`open: ${escapeHtml(name || "")}: unknown target`, "error");
-                return;
-            }
-
-            writeLine(`opening ${escapeHtml(name)}...`, "muted");
-            window.open(url, name === "email" ? "_self" : "_blank", "noopener,noreferrer");
         }
 
         form.addEventListener("submit", (event) => {
@@ -524,8 +630,7 @@
             updateSuggestion();
         }
 
-        showProfileIntro();
-        showHelp();
+        showIntro();
         updateSuggestion();
         input.focus();
     </script>
