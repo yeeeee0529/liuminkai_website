@@ -47,7 +47,7 @@
         .terminal-body {
             min-height: calc(100vh - clamp(36px, 6vw, 72px));
             padding: 0;
-            font-size: clamp(1rem, 1.15vw, 1.38rem);
+            font-size: clamp(0.9rem, 0.95vw, 1.1rem);
         }
 
         .output {
@@ -345,6 +345,7 @@
         }
 
         function showHelp() {
+            writeLine(`${works.length} work(s)`, "muted");
             writeLine("Available commands:", "muted");
             commandHelp.forEach(([command, description]) => {
                 writeLine(`  ${command.padEnd(12, " ")} ${description}`, "muted");
@@ -404,14 +405,14 @@
             currentIndex = works.indexOf(work);
             writeLine(`<span class="key">${escapeHtml(work.slug)}</span>`);
 
+            if (work.caption) {
+                writeLine(escapeHtml(work.caption), "photo-caption");
+            }
+
             if (work.images.length === 0) {
                 writeLine("no images found in this work", "dim");
             }
             work.images.forEach((src) => writeImage(src));
-
-            if (work.caption) {
-                writeLine(escapeHtml(work.caption), "photo-caption");
-            }
         }
 
         function showWorkList() {
@@ -458,10 +459,17 @@
             writeLine("liuminkai — photography", "profile-title");
             writeLine("Taipei / yeeeee.me");
             writeLine("");
-            showWorkList();
+
+            if (manifestMissing) {
+                writeLine("photo manifest not found", "error");
+                writeLine("run `node scripts/build-photo-manifest.js` and reload", "dim");
+                writeLine("");
+            }
+
+            showHelp();
             writeLine("");
-            writeLine("click a work or type a command", "dim");
-            writeLine("type `help` to see commands", "dim");
+            writeLine("type `list` to see works", "dim");
+            writeLine("type `random` to view a random work", "dim");
             writeLine("");
             writeLine('<a class="back-link" href="liuminkai.html">← back to profile</a>');
         }
