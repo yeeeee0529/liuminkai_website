@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "node scripts/build-photo-manifest.js"
+    "build": "node scripts/build-photo-manifest.js",
+    "test": "node --test"
   },
   "license": "ISC",
   "type": "commonjs",
