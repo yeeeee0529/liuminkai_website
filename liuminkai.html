@@ -542,27 +542,6 @@
             }
         }
 
-        // 除錯用：網址帶 ?debug 時顯示捲動相關數值，方便在手機上觀察
-        if (new URLSearchParams(location.search).has("debug") && window.visualViewport) {
-            const debugBox = document.createElement("pre");
-            debugBox.style.cssText = "position:fixed;top:0;right:0;z-index:9;margin:0;padding:4px 6px;font-size:11px;background:#222;color:#8bd5ff;pointer-events:none";
-            document.body.appendChild(debugBox);
-            const renderDebug = () => {
-                const viewport = window.visualViewport;
-                debugBox.textContent = [
-                    `scrollY ${window.scrollY}`,
-                    `vv.top  ${viewport.offsetTop.toFixed(1)}`,
-                    `vv.h    ${viewport.height.toFixed(1)}`,
-                    `innerH  ${window.innerHeight}`,
-                    `docH    ${document.documentElement.scrollHeight}`
-                ].join("\n");
-            };
-            window.visualViewport.addEventListener("resize", renderDebug);
-            window.visualViewport.addEventListener("scroll", renderDebug);
-            window.addEventListener("scroll", renderDebug);
-            renderDebug();
-        }
-
         suggestion.addEventListener("click", () => {
             acceptSuggestion();
             input.focus({ preventScroll: true });
