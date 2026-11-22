@@ -508,32 +508,40 @@
         input.addEventListener("input", updateSuggestion);
 
         // iOS 叫出鍵盤時會把整頁往上捲；若輸入列本來就看得到，拉回頂端
-        // iOS 的捲動動畫在 resize 之後才發生，所以 scroll 時與 focus 後延遲都要再檢查一次
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener("resize", keepPromptInView);
-            window.visualViewport.addEventListener("scroll", keepPromptInView);
-            input.addEventListener("focus", () => {
-                [100, 300, 600].forEach((delay) => setTimeout(keepPromptInView, delay));
-            });
-        }
-
-        function keepPromptInView() {
-            const viewport = window.visualViewport;
-            if (document.activeElement !== input || (window.scrollY === 0 && viewport.offsetTop === 0)) {
+        // iOS 點輸入框時 WebKit 會自己把畫面往上推；改由程式 focus 並要求不捲動
+        input.addEventListener("touchend", (event) => {
+            if (document.activeElement === input) {
                 return;
             }
 
-            // 預留觸控補全列的高度
-            const suggestionReserve = 60;
-            const promptBottom = form.getBoundingClientRect().bottom + window.scrollY + suggestionReserve;
-            if (promptBottom <= viewport.height) {
-                window.scrollTo(0, 0);
-            }
+            event.preventDefault();
+            input.focus({ preventScroll: true });
+        });
+
+        // 除錯用：網址帶 ?debug 時顯示捲動相關數值，方便在手機上觀察
+        if (new URLSearchParams(location.search).has("debug") && window.visualViewport) {
+            const debugBox = document.createElement("pre");
+            debugBox.style.cssText = "position:fixed;top:0;right:0;z-index:9;margin:0;padding:4px 6px;font-size:11px;background:#222;color:#8bd5ff;pointer-events:none";
+            document.body.appendChild(debugBox);
+            const renderDebug = () => {
+                const viewport = window.visualViewport;
+                debugBox.textContent = [
+                    `scrollY ${window.scrollY}`,
+                    `vv.top  ${viewport.offsetTop.toFixed(1)}`,
+                    `vv.h    ${viewport.height.toFixed(1)}`,
+                    `innerH  ${window.innerHeight}`,
+                    `docH    ${document.documentElement.scrollHeight}`
+                ].join("\n");
+            };
+            window.visualViewport.addEventListener("resize", renderDebug);
+            window.visualViewport.addEventListener("scroll", renderDebug);
+            window.addEventListener("scroll", renderDebug);
+            renderDebug();
         }
 
         suggestion.addEventListener("click", () => {
             acceptSuggestion();
-            input.focus();
+            input.focus({ preventScroll: true });
         });
 
         function getCandidates(value) {
@@ -556,7 +564,7 @@
                 chip.addEventListener("click", () => {
                     input.value = command;
                     updateSuggestion();
-                    input.focus();
+                    input.focus({ preventScroll: true });
                 });
                 suggestionBar.appendChild(chip);
             });
@@ -593,7 +601,7 @@
 
         showProfileIntro();
         updateSuggestion();
-        input.focus();
+        input.focus({ preventScroll: true });
     </script>
 </body>
 </html>

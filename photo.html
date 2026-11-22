@@ -592,32 +592,19 @@
         input.addEventListener("input", updateSuggestion);
 
         // iOS 叫出鍵盤時會把整頁往上捲；若輸入列本來就看得到，拉回頂端
-        // iOS 的捲動動畫在 resize 之後才發生，所以 scroll 時與 focus 後延遲都要再檢查一次
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener("resize", keepPromptInView);
-            window.visualViewport.addEventListener("scroll", keepPromptInView);
-            input.addEventListener("focus", () => {
-                [100, 300, 600].forEach((delay) => setTimeout(keepPromptInView, delay));
-            });
-        }
-
-        function keepPromptInView() {
-            const viewport = window.visualViewport;
-            if (document.activeElement !== input || (window.scrollY === 0 && viewport.offsetTop === 0)) {
+        // iOS 點輸入框時 WebKit 會自己把畫面往上推；改由程式 focus 並要求不捲動
+        input.addEventListener("touchend", (event) => {
+            if (document.activeElement === input) {
                 return;
             }
 
-            // 預留觸控補全列的高度
-            const suggestionReserve = 60;
-            const promptBottom = form.getBoundingClientRect().bottom + window.scrollY + suggestionReserve;
-            if (promptBottom <= viewport.height) {
-                window.scrollTo(0, 0);
-            }
-        }
+            event.preventDefault();
+            input.focus({ preventScroll: true });
+        });
 
         suggestion.addEventListener("click", () => {
             acceptSuggestion();
-            input.focus();
+            input.focus({ preventScroll: true });
         });
 
         function getCandidates(value) {
@@ -640,7 +627,7 @@
                 chip.addEventListener("click", () => {
                     input.value = command;
                     updateSuggestion();
-                    input.focus();
+                    input.focus({ preventScroll: true });
                 });
                 suggestionBar.appendChild(chip);
             });
@@ -677,7 +664,7 @@
 
         showIntro();
         updateSuggestion();
-        input.focus();
+        input.focus({ preventScroll: true });
     </script>
 </body>
 </html>
