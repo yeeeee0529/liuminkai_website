@@ -40,12 +40,14 @@
         .terminal {
             width: 100%;
             min-height: calc(100vh - clamp(36px, 6vw, 72px));
+            min-height: calc(100svh - clamp(36px, 6vw, 72px));
             background: var(--panel);
             overflow: hidden;
         }
 
         .terminal-body {
             min-height: calc(100vh - clamp(36px, 6vw, 72px));
+            min-height: calc(100svh - clamp(36px, 6vw, 72px));
             padding: 0;
             font-size: clamp(1rem, 1.15vw, 1.38rem);
         }
@@ -214,10 +216,12 @@
 
             .terminal {
                 min-height: calc(100vh - 20px);
+                min-height: calc(100svh - 20px);
             }
 
             .terminal-body {
                 min-height: calc(100vh - 20px);
+                min-height: calc(100svh - 20px);
                 font-size: 1rem;
             }
         }
@@ -514,6 +518,24 @@
         });
 
         input.addEventListener("input", updateSuggestion);
+
+        // iOS 叫出鍵盤時會把整頁往上捲；若輸入列本來就看得到，拉回頂端
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener("resize", keepPromptInView);
+        }
+
+        function keepPromptInView() {
+            if (document.activeElement !== input) {
+                return;
+            }
+
+            // 預留觸控補全列的高度
+            const suggestionReserve = 60;
+            const promptBottom = form.getBoundingClientRect().bottom + window.scrollY + suggestionReserve;
+            if (promptBottom <= window.visualViewport.height) {
+                window.scrollTo(0, 0);
+            }
+        }
 
         suggestion.addEventListener("click", () => {
             acceptSuggestion();
