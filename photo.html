@@ -604,19 +604,25 @@
         input.addEventListener("input", updateSuggestion);
 
         // iOS 叫出鍵盤時會把整頁往上捲；若輸入列本來就看得到，拉回頂端
+        // iOS 的捲動動畫在 resize 之後才發生，所以 scroll 時與 focus 後延遲都要再檢查一次
         if (window.visualViewport) {
             window.visualViewport.addEventListener("resize", keepPromptInView);
+            window.visualViewport.addEventListener("scroll", keepPromptInView);
+            input.addEventListener("focus", () => {
+                [100, 300, 600].forEach((delay) => setTimeout(keepPromptInView, delay));
+            });
         }
 
         function keepPromptInView() {
-            if (document.activeElement !== input) {
+            const viewport = window.visualViewport;
+            if (document.activeElement !== input || (window.scrollY === 0 && viewport.offsetTop === 0)) {
                 return;
             }
 
             // 預留觸控補全列的高度
             const suggestionReserve = 60;
             const promptBottom = form.getBoundingClientRect().bottom + window.scrollY + suggestionReserve;
-            if (promptBottom <= window.visualViewport.height) {
+            if (promptBottom <= viewport.height) {
                 window.scrollTo(0, 0);
             }
         }
