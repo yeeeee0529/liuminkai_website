@@ -103,6 +103,16 @@
             color: var(--error);
         }
 
+        .contact-link {
+            color: var(--accent-2);
+            text-decoration: none;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .contact-link:hover {
+            border-bottom-color: var(--accent-2);
+        }
+
         .input-form {
             position: relative;
             display: flex;
@@ -229,7 +239,7 @@
 </head>
 <body>
     <main class="terminal" aria-label="liuminkai interactive terminal">
-        <section class="terminal-body" onclick="document.getElementById('terminal-input').focus()">
+        <section class="terminal-body">
             <div class="output" id="output" aria-live="polite"></div>
 
             <form class="input-form" id="terminal-form" autocomplete="off">
@@ -349,9 +359,48 @@
             return age;
         }
 
+        // 首頁可直接點擊的項目，觸控裝置不必叫出鍵盤
+        const entries = [
+            { name: "instagram", label: "@yeee_0529", url: links.instagram, external: true },
+            { name: "x", label: "@yeeeee0529", url: links.x, external: true },
+            { name: "facebook", label: "liuminkai", url: links.facebook, external: true },
+            { name: "github", label: "yeeeee0529", url: links.github, external: true },
+            { name: "email", label: "liuminkai@yeeeee.me", url: links.email, external: false },
+            { name: "photo", label: "photography", url: "photo.html", external: false },
+            { name: "contact", label: "contact me", url: "contact.html", external: false }
+        ];
+
+        function writeEntry({ name, label, url, external }) {
+            const line = document.createElement("p");
+            line.className = "line";
+
+            const key = document.createElement("span");
+            key.className = "key";
+            key.textContent = name.padEnd(10, " ");
+            line.appendChild(key);
+
+            const link = document.createElement("a");
+            link.className = "contact-link";
+            link.href = url;
+            link.textContent = label;
+            if (external) {
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+            }
+            line.appendChild(link);
+
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
         function showProfileIntro() {
             writeLine("liuminkai", "profile-title");
             writeLine(`Taipei / ${getAgeFromBirthday(2009, 5, 29)}y / Programmer / Photographer`);
+            writeLine("");
+            entries.forEach(writeEntry);
+            writeLine("");
+            writeLine("click a link or type a command", "dim");
+            writeLine("type `help` to see commands", "dim");
             writeLine("");
         }
 
@@ -527,7 +576,6 @@
         }
 
         showProfileIntro();
-        showHelp();
         updateSuggestion();
         input.focus();
     </script>
