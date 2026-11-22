@@ -319,6 +319,7 @@
         ];
 
         const completions = commandHelp.map(([command]) => command);
+        const INTRO_WORK_LIMIT = 3;
 
         const history = [];
         let historyIndex = 0;
@@ -417,7 +418,47 @@
             work.images.forEach((src) => writeImage(src));
         }
 
-        function showWorkList() {
+        // 可點擊的指令列，觸控裝置不必叫出鍵盤
+        function writeActions() {
+            if (works.length === 0) {
+                return;
+            }
+
+            const line = document.createElement("p");
+            line.className = "line";
+
+            const actions = [["random", "random"]];
+            if (works.length > INTRO_WORK_LIMIT) {
+                actions.unshift(["list", `list (${works.length})`]);
+            }
+
+            actions.forEach(([command, label], index) => {
+                if (index > 0) {
+                    line.appendChild(document.createTextNode("  "));
+                }
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "work-link";
+                button.textContent = label;
+                button.addEventListener("click", () => runCommand(command));
+                line.appendChild(button);
+            });
+
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // 從作品中隨機抽出 count 個（Fisher–Yates 洗牌）
+        function pickRandomWorks(count) {
+            const pool = works.slice();
+            for (let i = pool.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+            return pool.slice(0, count);
+        }
+
+        function showWorkList(list = works) {
             if (manifestMissing) {
                 writeLine("photo manifest not found", "error");
                 writeLine("run `node scripts/build-photo-manifest.js` and reload", "dim");
@@ -430,7 +471,7 @@
                 return;
             }
 
-            works.forEach((work) => writeWorkRow(work));
+            list.forEach((work) => writeWorkRow(work));
         }
 
         function step(direction) {
@@ -462,16 +503,12 @@
             writeLine("Taipei / yeeeee.me");
             writeLine("");
 
-            if (manifestMissing) {
-                writeLine("photo manifest not found", "error");
-                writeLine("run `node scripts/build-photo-manifest.js` and reload", "dim");
-                writeLine("");
-            }
-
-            showHelp();
+            // 首頁隨機抽幾個作品，其餘透過 list 展開，避免作品變多時過長
+            showWorkList(pickRandomWorks(INTRO_WORK_LIMIT));
+            writeActions();
             writeLine("");
-            writeLine("type `list` to see works", "dim");
-            writeLine("type `random` to view a random work", "dim");
+            writeLine("click a work or type a command", "dim");
+            writeLine("type `help` to see commands", "dim");
             writeLine("");
             writeLine('<a class="back-link" href="liuminkai.html">← back to profile</a>');
         }
