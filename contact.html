@@ -183,8 +183,8 @@
             position: absolute;
             left: 0;
             right: 0;
-            top: 100%;
-            margin-top: 10px;
+            bottom: 100%;
+            margin-bottom: 10px;
             padding-bottom: 2px;
             gap: 8px;
             background: var(--panel);
@@ -500,11 +500,13 @@
             input.focus({ preventScroll: true });
         });
 
-        // 鍵盤打開後只捲到剛好露出輸入列與補全列，避免 iOS 把輸入列捲到畫面中間
+        // 鍵盤打開後只捲到剛好露出輸入列，避免 iOS 把輸入列捲到畫面中間；
+        // 等鍵盤動畫停下來才修正一次，減少畫面抖動
+        let fitPromptTimer = 0;
         if (window.visualViewport) {
-            window.visualViewport.addEventListener("resize", fitPromptAboveKeyboard);
-            input.addEventListener("focus", () => {
-                [100, 300, 600].forEach((delay) => setTimeout(fitPromptAboveKeyboard, delay));
+            window.visualViewport.addEventListener("resize", () => {
+                clearTimeout(fitPromptTimer);
+                fitPromptTimer = setTimeout(fitPromptAboveKeyboard, 150);
             });
         }
 
@@ -513,12 +515,12 @@
                 return;
             }
 
-            // 預留觸控補全列的高度
-            const suggestionReserve = 56;
-            const promptBottom = form.getBoundingClientRect().bottom + window.scrollY + suggestionReserve;
+            // 補全列在輸入列上方，只需留一點邊距
+            const bottomMargin = 8;
+            const promptBottom = form.getBoundingClientRect().bottom + window.scrollY + bottomMargin;
             const target = Math.max(0, Math.ceil(promptBottom - window.visualViewport.height));
             if (Math.abs(window.scrollY - target) > 1) {
-                window.scrollTo(0, target);
+                window.scrollTo({ top: target, behavior: "smooth" });
             }
         }
 
